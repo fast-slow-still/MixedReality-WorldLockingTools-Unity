@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+#define WLT_WSA_MOVE_ANCHORS
+
 using UnityEngine;
 #if UNITY_WSA
 using UnityEngine.XR.WSA;
@@ -64,9 +66,33 @@ namespace Microsoft.MixedReality.WorldLocking.Core
         {
             get
             {
+#if WLT_WSA_MOVE_ANCHORS
+                return MovePose(transform.GetGlobalPose());
+#else // WLT_WSA_MOVE_ANCHORS
                 return transform.GetGlobalPose();
+#endif // WLT_WSA_MOVE_ANCHORS
             }
         }
+
+#if WLT_WSA_MOVE_ANCHORS
+        private float Period = 5.0f;
+
+        private float Amplitude = 0.3f;
+
+        private Pose MovePose(Pose globalPose)
+        {
+            float age = Time.time;
+
+            float modAge = (float)(age / Period);
+            modAge -= Mathf.Floor(modAge);
+
+            float move = Mathf.Sin(modAge * Mathf.PI * 2.0f) * Amplitude;
+
+            globalPose.position = new Vector3(globalPose.position.x + move, globalPose.position.y, globalPose.position.z);
+
+            return globalPose;
+        }
+#endif // WLT_WSA_MOVE_ANCHORS
 
         // Start is called before the first frame update
         private void Start ()
