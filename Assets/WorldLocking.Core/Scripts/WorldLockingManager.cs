@@ -624,6 +624,11 @@ namespace Microsoft.MixedReality.WorldLocking.Core
 
             AdjustmentFrame.SetLocalPose(PinnedFromLocked.Multiply(LockedFromPlayspace));
 
+#if false
+            AdjustmentFrame.SetLocalPose(MovePose(AdjustmentFrame.GetLocalPose())); // mafinc - hacktest
+#endif // false
+            Debug.Log($"WLT: Adj{AdjustmentFrame.position.ToString("F3")} Cam{Camera.main.transform.position.ToString("F3")}");
+
 #if false && WLT_ARSUBSYSTEMS_PRESENT
             if ((AdjustmentFrame.GetGlobalPose().position != Vector3.zero) || (AdjustmentFrame.GetGlobalPose().rotation != Quaternion.identity))
             {
@@ -633,6 +638,29 @@ namespace Microsoft.MixedReality.WorldLocking.Core
 
             AutoSaveTriggerHook();
         }
+
+#if false
+        private float Period = 5.0f;
+
+        private float Amplitude = 0.3f;
+
+        private Pose MovePose(Pose globalPose)
+        {
+            float age = Time.time;
+
+            float modAge = (float)(age / Period);
+            modAge -= Mathf.Floor(modAge);
+
+            Vector3 move = new Vector3(Mathf.Sin(modAge * Mathf.PI * 2.0f) * Amplitude, 0, 0);
+
+            Debug.Log($"move={move.ToString("F3")}");
+
+            globalPose.position = globalPose.position + move;
+
+            return globalPose;
+        }
+
+#endif // false
 
         private WorldLockingManager()
         {
@@ -755,9 +783,9 @@ namespace Microsoft.MixedReality.WorldLocking.Core
 #endif // UNITY_WSA
         }
 
-        #endregion
+#endregion
 
-        #region Load and Save
+#region Load and Save
 
         private string stateFileNameBase => Application.persistentDataPath + "/frozenWorldState.hkfw";
 

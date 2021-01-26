@@ -1,7 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-#define WLT_ARCORE_EXTRA_DEBUGGING
+//#define WLT_ARCORE_EXTRA_DEBUGGING
+#define WLT_ARCORE_MOVE_ANCHORS
 
 using System.Collections;
 using System.Collections.Generic;
@@ -59,14 +60,18 @@ namespace Microsoft.MixedReality.WorldLocking.Core
 #if WLT_ARCORE_SDK_INCLUDED
             else
             {
-                Vector3 move = internalAnchor.transform.position - transform.position;
+                Pose anchorGlobalPose = internalAnchor.transform.GetGlobalPose();
+#if WLT_ARCORE_MOVE_ANCHORS
+                anchorGlobalPose = MovePose(anchorGlobalPose);
+#endif // WLT_ARCORE_MOVE_ANCHORS
 #if WLT_ARCORE_EXTRA_DEBUGGING
+                Vector3 move = anchorGlobalPose.position - transform.position;
                 if (move.magnitude > 0.001f)
                 {
                     Debug.Log($"{name} Moving by {move.ToString("F3")}");
                 }
 #endif // WLT_ARCORE_EXTRA_DEBUGGING
-                transform.SetGlobalPose(internalAnchor.transform.GetGlobalPose());
+                transform.SetGlobalPose(anchorGlobalPose);
             }
 #endif // WLT_ARCORE_SDK_INCLUDED
         }
@@ -79,5 +84,26 @@ namespace Microsoft.MixedReality.WorldLocking.Core
 #endif // WLT_ARCORE_SDK_INCLUDED
         }
 
+#if WLT_ARCORE_MOVE_ANCHORS
+        private float Period = 5.0f;
+
+        private float Amplitude = 0.3f;
+
+        private Pose MovePose(Pose globalPose)
+        {
+            float age = Time.time;
+
+            float modAge = (float)(age / Period);
+            modAge -= Mathf.Floor(modAge);
+
+            Vector3 move = new Vector3(Mathf.Sin(modAge * Mathf.PI * 2.0f) * Amplitude, 0, 0);
+
+            Debug.Log($"move={move.ToString("F3")}");
+
+            globalPose.position = globalPose.position + move;
+
+            return globalPose;
+        }
+#endif // WLT_ARCORE_MOVE_ANCHORS
     }
 }
